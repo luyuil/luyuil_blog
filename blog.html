@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>luyuil_blog</title>
+    <!-- 引入外部 CSS 文件 -->
+    <link rel="stylesheet" href="./CSS/style.css">
+</head>
+<body>
+    <!-- 视频背景 -->
+    <video autoplay muted loop playsinline id="bg-video" poster="poster.jpg">
+        <source src="./image/Isla1.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+    </video>
+    
+    <!-- 半透明遮罩（可选） -->
+    <div class="overlay"></div>
+
+    <!-- 中间卡片窗口 -->
+    <div class="main-card">
+        <div class="card-header">home</div>
+        <div class="card-body">
+            <h1 class="greeting">Hi, i'm <span class="highlight">luyuil</span></h1>
+            <p class="subtitle">Just for fun</p>
+            
+            <!-- 卡片示例图标区 -->
+            <div class="icon-row">
+                <div class="icon-item" id="about-icon"><img src="./image/myself2.svg" alt="icon1"><span>about</span></div>
+                <div class="icon-item" id="note-icon"><img src="./image/note.svg" alt="icon2"><span>note</span></div>
+                <div class="icon-item" id="photo"><img src="./image/photo2.svg" alt="icon3"><span>photo</span></div>
+                <div class="icon-item" id="link"><img src="./image/link.svg" alt="icon4"><span>link</span></div>
+                <div class="icon-item" id="music-icon"><img src="./image/music.svg" alt="icon5"><span>music</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部社交图标 -->
+    <div class="link-icons">
+        <!-- GitHub 图标 -->
+        <div class="social-icon" id="github-icon" title="GitHub">
+            <img src="./image/github.svg" alt="GitHub">
+        </div>
+        <!-- Bilibili 图标 -->
+        <div class="social-icon" id="bilibili-icon" title="Bilibili">
+            <img src="./image/bilibili.jpg" alt="Bilibili">
+        </div>
+    </div>
+
+    <!-- 引入外部 JS 文件 -->
+    <script src="./JavaScript/script.js"></script>
+</body>
+</html>
