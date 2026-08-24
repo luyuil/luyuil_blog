@@ -47,71 +47,106 @@ document.addEventListener('DOMContentLoaded', function() {
         isPlaying = false;
     });
 
-    // ================= About 窗口逻辑 =================
-    const aboutIcon = document.querySelectorAll('.icon-item')[0]; // 找到第一个图标(about)
+    // =================  about窗口 =================
+    const aboutIcon = document.querySelectorAll('.icon-item')[0]; // about 图标
     const aboutWindow = document.getElementById('about-window');
     const closeBtn = document.getElementById('close-btn');
-    const maximizeBtn = document.getElementById('maximize-btn');
-    const popupHeader = document.getElementById('popup-header');
-    
+    const popupHeader = document.getElementById('popup-header'); // 补上这个变量
+
+    let isOpen = false; 
+
     // 1. 点击 about 打开窗口
     aboutIcon.addEventListener('click', function() {
+        if (isOpen) return; 
+        isOpen = true;
+
         aboutWindow.style.display = 'flex';
-        loadMarkdown(); // 打开时加载 md 文件
+        aboutWindow.style.pointerEvents = 'auto';
+
+        // 关键：将窗口固定在屏幕正中间，并且用 margin 来精确补偿宽度/高度的一半
+        aboutWindow.style.top = '50%';
+        aboutWindow.style.left = '50%';
+        aboutWindow.style.marginTop = '-300px'; // 高度的一半 (600/2)
+        aboutWindow.style.marginLeft = '-400px'; // 宽度的一半 (800/2)
+
+        // 保证此时没有 translate 干扰，让 scale 从正中心放大
+        aboutWindow.style.transform = 'scale(0)';
+
+        animateWindow(aboutWindow, {
+            fromScale: 0,
+            toScale: 1,
+            duration: 400,
+            onComplete: () => { loadMarkdown(); } 
+        });
     });
 
     // 2. 点击关闭按钮
     closeBtn.addEventListener('click', function() {
-        aboutWindow.style.display = 'none';
+        if (!isOpen) return;
+        isOpen = false;
+        aboutWindow.style.pointerEvents = 'none';
+
+        // 关键：读取当前窗口的真实位置，用 margin 定格，防止跳回中间
+        const rect = aboutWindow.getBoundingClientRect();
+        aboutWindow.style.transform = 'none'; // 去掉可能残留的 translate（其实没有）
+        aboutWindow.style.left = '0px';
+        aboutWindow.style.top = '0px';
+        aboutWindow.style.marginLeft = rect.left + 'px';
+        aboutWindow.style.marginTop = rect.top + 'px';
+
+        animateWindow(aboutWindow, {
+            fromScale: 1,
+            toScale: 0,
+            duration: 300,
+            onComplete: () => { 
+                aboutWindow.style.display = 'none'; 
+                // 关闭后重置，确保下一次打开能完美居中
+                aboutWindow.style.marginTop = '0px';
+                aboutWindow.style.marginLeft = '0px';
+            }
+        });
     });
 
-    // 3. 点击放大/还原按钮
-    maximizeBtn.addEventListener('click', function() {
-        aboutWindow.classList.toggle('fullscreen');
-        // 切换图标文本
-        if (aboutWindow.classList.contains('fullscreen')) {
-            maximizeBtn.textContent = '⤢'; // 还原图标
-        } else {
-            maximizeBtn.textContent = '⛶'; // 放大图标
-        }
-    });
-
-    // 4. 窗口拖拽功能（在头部按住拖动）
+    // 3. 窗口拖拽功能
     let isDragging = false;
     let offsetX, offsetY;
 
     popupHeader.addEventListener('mousedown', function(e) {
-        // 排除点击按钮时的拖拽
         if (e.target.classList.contains('control-btn')) return; 
-
-        // 如果处于全屏，禁止拖拽
-        if (aboutWindow.classList.contains('fullscreen')) return;
-
-        isDragging = true;
-        // 计算鼠标位置和窗口左上角的偏移量
+        
+        // 获取当前实际位置
         const rect = aboutWindow.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
         
-        // 禁用文本选中
+        isDragging = true;
         document.body.style.userSelect = 'none';
+        
+        // 将窗口转为绝对像素定位（margin）方式，去掉所有 transform 干扰
+        aboutWindow.style.transform = 'none';
+        aboutWindow.style.left = '0px';
+        aboutWindow.style.top = '0px';
+        aboutWindow.style.marginLeft = rect.left + 'px';
+        aboutWindow.style.marginTop = rect.top + 'px';
+        
+        aboutWindow.style.transition = 'none'; // 拖拽时禁止过渡，防止卡顿
     });
 
     document.addEventListener('mousemove', function(e) {
         if (!isDragging) return;
         
-        // 移动窗口
-        aboutWindow.style.left = e.clientX - offsetX + 'px';
-        aboutWindow.style.top = e.clientY - offsetY + 'px';
-        aboutWindow.style.transform = 'none'; // 去掉居中的 transform
+        aboutWindow.style.marginLeft = (e.clientX - offsetX) + 'px';
+        aboutWindow.style.marginTop = (e.clientY - offsetY) + 'px';
     });
 
     document.addEventListener('mouseup', function() {
         isDragging = false;
         document.body.style.userSelect = '';
+        aboutWindow.style.transition = ''; // 恢复过渡，供下次动画使用
     });
 
-    // 5. 加载 Markdown 文件
+
+    // 4. 加载 Markdown 文件
     function loadMarkdown() {
         const mdContent = document.getElementById('md-content');
         
