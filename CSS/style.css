@@ -154,6 +154,128 @@ body, html {
     border-radius: 50%;
 }
 
+/* ================= 弹出窗口样式 ================= */
+.popup-window {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px; 
+    height: 600px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 100; 
+    display: none; 
+    flex-direction: column; /* 改为垂直排列 */
+    overflow: hidden;
+    user-select: none; 
+}
+
+.profile-box {
+    display: flex;
+    align-items: center;
+    padding: 30px 40px 20px 40px;
+    background-color: #fff; /* 白色背景，让简介区更明显 */
+    border-bottom: 1px solid #eee;
+    user-select: text; /* 允许选中文字 */
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* 圆形头像 */
+    overflow: hidden;
+    margin-right: 30px;
+    flex-shrink: 0;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-text h2 {
+    margin: 0 0 5px 0;
+    color: #666;
+    font-size: 2.5rem;
+}
+
+.profile-text .english-name {
+    color: aqua;
+    font-size: 2.5rem;
+    margin-left: 10px;
+}
+
+.profile-text p {
+    margin: 0;
+    color: #777;
+    font-size: 1rem;
+}
+
+/* 全屏模式（点击放大后） */
+.popup-window.fullscreen {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+}
+
+.popup-header {
+    background-color: rgb(51, 108, 199);
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: monospace;
+    cursor: grab; /* 表示可以拖拽 */
+}
+
+.popup-header:active {
+    cursor: grabbing; /* 拖拽时变成抓手 */
+}
+
+.popup-title {
+    font-size: 16px;
+}
+
+.window-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.control-btn {
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.control-btn:hover {
+    color: #ffcc00;
+}
+
+.popup-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    user-select: text; /* 内容可选中 */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Markdown 标题样式 */
+.popup-body h1, .popup-body h2, .popup-body h3 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-top: 20px;
+}
+
 /* ================= 动画关键帧 ================= */
 @keyframes fadeInUp {
     from {
