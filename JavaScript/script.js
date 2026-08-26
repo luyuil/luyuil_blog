@@ -35,133 +35,73 @@ document.addEventListener('DOMContentLoaded', function() {
         isPlaying = false;
     });
 
-    // ================= about窗口 =================
-    const aboutIcon = document.querySelectorAll('.icon-item')[0];
-    const aboutWindow = document.getElementById('about-window');
-    const aboutCloseBtn = document.getElementById('close-btn');
-    const aboutPopupHeader = document.getElementById('popup-header');
+    // ================= 核心辅助函数 =================
 
-    let aboutOpen = false; 
-
-    aboutIcon.addEventListener('click', function() {
-        if (aboutOpen) return; 
-        aboutOpen = true;
-
-        aboutWindow.style.display = 'flex';
-        aboutWindow.style.pointerEvents = 'auto';
-
-        aboutWindow.style.top = '50%';
-        aboutWindow.style.left = '50%';
-        aboutWindow.style.marginTop = '-300px';
-        aboutWindow.style.marginLeft = '-400px';
-        aboutWindow.style.transform = 'scale(0)';
-
-        animateWindow(aboutWindow, {
-            fromScale: 0,
-            toScale: 1,
-            duration: 400,
-            onComplete: () => { loadMarkdown(); } 
-        });
-    });
-
-    aboutCloseBtn.addEventListener('click', function() {
-        if (!aboutOpen) return;
-        aboutOpen = false;
-        aboutWindow.style.pointerEvents = 'none';
-
-        const rect = aboutWindow.getBoundingClientRect();
-        aboutWindow.style.transform = 'none';
-        aboutWindow.style.left = '0px';
-        aboutWindow.style.top = '0px';
-        aboutWindow.style.marginLeft = rect.left + 'px';
-        aboutWindow.style.marginTop = rect.top + 'px';
-
-        animateWindow(aboutWindow, {
-            fromScale: 1,
-            toScale: 0,
-            duration: 300,
-            onComplete: () => { 
-                aboutWindow.style.display = 'none'; 
-                aboutWindow.style.marginTop = '0px';
-                aboutWindow.style.marginLeft = '0px';
-            }
-        });
-    });
-
-    // ================= link窗口 =================
-    const linkIcon = document.querySelectorAll('.icon-item')[3]; // 第4个图标
-    const linkWindow = document.getElementById('link-window');
-    const linkCloseBtn = document.getElementById('link-close-btn');
-    const linkPopupHeader = document.getElementById('link-popup-header');
-    const linkContent = document.getElementById('link-content');
-
-    let linkOpen = false;
-
-    // 封装：添加项目卡片函数（以后直接用这个函数）
-    function addProject(name, url) {
-        const card = document.createElement('div');
-        card.className = 'project-card';
-        card.textContent = name; // 显示项目名称
+    // 获取元素不被 transform 干扰的真实坐标
+    function getUntransformedRect(element) {
+        element.style.transition = 'none';
+        const originalTransform = element.style.transform;
+        element.style.transform = 'none';
         
-        // 点击跳转到对应链接
-        card.addEventListener('click', function() {
-            window.open(url, '_blank');
-        });
-
-        linkContent.appendChild(card); // 自动排版（flex/calc 会自动换行）
+        const rect = element.getBoundingClientRect();
+        
+        // 恢复原本的 transform
+        element.style.transform = originalTransform;
+        return rect;
     }
 
-    // 手动添加你的两个项目
-    addProject('24电赛H车', 'https://github.com/luyuil/Line_Track_Car');
-    addProject('个人博客架构', 'https://github.com/luyuil/luyuil_blog');
+    // 通用窗口开关函数
+    function setupWindow(iconId, windowId, closeBtnId, headerId) {
+        const icon = document.getElementById(iconId);
+        const windowElement = document.getElementById(windowId);
+        const closeBtn = document.getElementById(closeBtnId);
+        const header = document.getElementById(headerId);
+        
+        let isOpen = false;
 
-    // 点击 link 图标打开窗口
-    linkIcon.addEventListener('click', function() {
-        if (linkOpen) return;
-        linkOpen = true;
+        icon.addEventListener('click', function() {
+            if (isOpen) return;
+            isOpen = true;
 
-        linkWindow.style.display = 'flex';
-        linkWindow.style.pointerEvents = 'auto';
+            windowElement.style.display = 'flex';
+            windowElement.style.pointerEvents = 'auto';
 
-        linkWindow.style.top = '50%';
-        linkWindow.style.left = '50%';
-        linkWindow.style.marginTop = '-300px';
-        linkWindow.style.marginLeft = '-400px';
-        linkWindow.style.transform = 'scale(0)';
+            windowElement.style.top = '50%';
+            windowElement.style.left = '50%';
+            windowElement.style.marginTop = '-300px';
+            windowElement.style.marginLeft = '-400px';
+            windowElement.style.transform = 'scale(0)';
 
-        animateWindow(linkWindow, {
-            fromScale: 0,
-            toScale: 1,
-            duration: 400
+            animateWindow(windowElement, { fromScale: 0, toScale: 1, duration: 400 });
         });
-    });
 
-    // 关闭 link 窗口
-    linkCloseBtn.addEventListener('click', function() {
-        if (!linkOpen) return;
-        linkOpen = false;
-        linkWindow.style.pointerEvents = 'none';
+        closeBtn.addEventListener('click', function() {
+            if (!isOpen) return;
+            isOpen = false;
+            windowElement.style.pointerEvents = 'none';
 
-        const rect = linkWindow.getBoundingClientRect();
-        linkWindow.style.transform = 'none';
-        linkWindow.style.left = '0px';
-        linkWindow.style.top = '0px';
-        linkWindow.style.marginLeft = rect.left + 'px';
-        linkWindow.style.marginTop = rect.top + 'px';
+            const rect = getUntransformedRect(windowElement);
+            windowElement.style.transform = 'none';
+            windowElement.style.left = '0px';
+            windowElement.style.top = '0px';
+            windowElement.style.marginLeft = rect.left + 'px';
+            windowElement.style.marginTop = rect.top + 'px';
 
-        animateWindow(linkWindow, {
-            fromScale: 1,
-            toScale: 0,
-            duration: 300,
-            onComplete: () => { 
-                linkWindow.style.display = 'none'; 
-                linkWindow.style.marginTop = '0px';
-                linkWindow.style.marginLeft = '0px';
-            }
+            animateWindow(windowElement, {
+                fromScale: 1, toScale: 0, duration: 300,
+                onComplete: () => { 
+                    windowElement.style.display = 'none'; 
+                    windowElement.style.marginTop = '0px';
+                    windowElement.style.marginLeft = '0px';
+                }
+            });
         });
-    });
 
-    // ================= 通用拖拽函数 (支持 about 和 link) =================
+        // 为窗口头部绑定拖拽
+        makeDraggable(header, windowElement);
+    }
+
+    // 通用拖拽函数
     function makeDraggable(header, windowElement) {
         let isDragging = false;
         let offsetX, offsetY;
@@ -169,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         header.addEventListener('mousedown', function(e) {
             if (e.target.classList.contains('control-btn')) return; 
             
-            const rect = windowElement.getBoundingClientRect();
+            const rect = getUntransformedRect(windowElement);
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
             
@@ -199,17 +139,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 为 about 和 link 窗口绑定拖拽
-    makeDraggable(aboutPopupHeader, aboutWindow);
-    makeDraggable(linkPopupHeader, linkWindow);
+    // ================= about窗口 =================
+    setupWindow('about-icon', 'about-window', 'close-btn', 'popup-header');
 
-    // 4. 加载 about 的 Markdown 文件
+    // about 的 Markdown 加载逻辑
+    let markedReady = null;
+    function ensureMarked() {
+        if (window.marked) return Promise.resolve();
+        if (!markedReady) {
+            markedReady = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+                script.onload = () => resolve();
+                script.onerror = () => {
+                    markedReady = null;
+                    reject(new Error('marked.js 加载失败'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        return markedReady;
+    }
+
     function loadMarkdown() {
         const mdContent = document.getElementById('md-content');
         
-        fetch('./docs/about.md')
-            .then(response => response.text())
-            .then(text => {
+        Promise.all([
+            fetch('./docs/about.md').then(response => response.text()),
+            ensureMarked()
+        ])
+            .then(([text]) => {
                 mdContent.innerHTML = marked.parse(text);
             })
             .catch(error => {
@@ -217,4 +176,122 @@ document.addEventListener('DOMContentLoaded', function() {
                 mdContent.innerHTML = '<p style="color:red;">无法加载md文件，请检查路径是否正确。</p>';
             });
     }
+
+    // 在 about 窗口动画结束后加载 Markdown（优化体验）
+    document.getElementById('about-icon').addEventListener('click', function() {
+        setTimeout(loadMarkdown, 400); // 等动画结束再加载
+    });
+
+    // ================= link窗口 =================
+    setupWindow('link', 'link-window', 'link-close-btn', 'link-popup-header');
+
+    const linkContent = document.getElementById('link-content');
+
+    function addProject(name, url) {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.textContent = name;
+        card.addEventListener('click', () => window.open(url, '_blank'));
+        linkContent.appendChild(card);
+    }
+
+    addProject('24电赛H车', 'https://github.com/luyuil/Line_Track_Car');
+    addProject('个人博客架构', 'https://github.com/luyuil/luyuil_blog');
+
+    // ================= Photo 窗口 =================
+    // 注意：先 setupWindow，再初始化里面的元素
+    setupWindow('photo', 'photo-window', 'photo-close-btn', 'photo-popup-header');
+
+    const photoContent = document.getElementById('photo-content');
+    const previewOverlay = document.getElementById('photo-preview-overlay');
+    const previewImg = document.getElementById('preview-img');
+    const previewClose = document.getElementById('preview-close-btn');
+
+    // 防止照片在窗口还没显示时获取宽高为0，所以延迟到窗口打开后再添加
+    window.addEventListener('resize', () => {
+        // 如果窗口大小变了，重新计算边界（可选，这里仅作提示）
+    });
+
+    function addPhoto(imageSrc) {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+
+        // 随机旋转角度
+        const randomRotate = Math.floor(Math.random() * 30) - 15;
+        
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        card.appendChild(img);
+
+        // 随机位置
+        setTimeout(() => {
+            const rect = photoContent.getBoundingClientRect();
+            const maxX = Math.max(0, rect.width - 150);
+            const maxY = Math.max(0, rect.height - 150);
+            card.style.left = Math.floor(Math.random() * maxX) + 'px';
+            card.style.top = Math.floor(Math.random() * maxY) + 'px';
+        }, 50); 
+        
+        card.style.transform = `rotate(${randomRotate}deg)`;
+
+        // 核心逻辑：用 document 监听，鼠标移出卡片也不会断
+        card.addEventListener('mousedown', function(e) {
+            e.stopPropagation(); 
+            e.preventDefault(); // 防止默认拖拽图片行为导致文字被选中
+
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let originLeft = parseFloat(card.style.left) || 0;
+            let originTop = parseFloat(card.style.top) || 0;
+            
+            let hasDragged = false;
+
+            function onMouseMove(ev) {
+                // 只要移动超过 3 像素，就算拖拽
+                if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) {
+                    hasDragged = true;
+                }
+
+                let newLeft = originLeft + (ev.clientX - startX);
+                let newTop = originTop + (ev.clientY - startY);
+
+                const rect = photoContent.getBoundingClientRect();
+                newLeft = Math.max(0, Math.min(newLeft, rect.width - 150));
+                newTop = Math.max(0, Math.min(newTop, rect.height - 150));
+
+                card.style.left = newLeft + 'px';
+                card.style.top = newTop + 'px';
+            }
+
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+
+                // 如果没有拖拽，就视为点击，触发预览
+                if (!hasDragged) {
+                    previewImg.src = imageSrc;
+                    previewOverlay.classList.add('show');
+                }
+            }
+
+            // 把监听绑定在 document 上
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        photoContent.appendChild(card);
+    }
+
+    // 添加你的图片
+    addPhoto('./image/isla5.jpg');
+    addPhoto('./image/misaki.jpg');
+    addPhoto('./image/clanned.png');
+    addPhoto('./image/air.jpg');
+    addPhoto('./image/anglebeat.jpg');
+    
+    // 大图预览的关闭逻辑
+    previewClose.addEventListener('click', () => previewOverlay.classList.remove('show'));
+    previewOverlay.addEventListener('click', (e) => {
+        if (e.target === previewOverlay) previewOverlay.classList.remove('show');
+    });
 });

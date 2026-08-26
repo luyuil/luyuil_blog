@@ -6,6 +6,8 @@
     <title>luyuil_blog</title>
     <!-- 引入外部 CSS 文件 -->
     <link rel="stylesheet" href="./CSS/style.css">
+    <!-- marked.js 用于渲染 md（async 异步加载，不阻塞页面交互） -->
+    <script async src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <!-- 视频背景 -->
@@ -51,9 +53,6 @@
     <script src="./JavaScript/windowAnimation.js"></script>
     <script src="./JavaScript/script.js"></script>
 
-    <!-- 在 <head> 中引入 marked.js (用于渲染 md) -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <!-- 在 <body> 末尾加入弹出窗口结构 -->
     <!-- about窗口 -->
     <div class="popup-window" id="about-window">
@@ -88,6 +87,28 @@
     </div>
 
     <!-- photo窗口 -->
+    <div class="popup-window" id="photo-window">
+        <!-- 头部 -->
+        <div class="popup-header" id="photo-popup-header">
+            <span class="popup-title">photo</span>
+            <div class="window-controls">
+                <span class="control-btn" id="photo-close-btn" title="关闭">✕</span>
+            </div>
+        </div>
+
+        <!-- 照片墙区域 -->
+        <div class="popup-body photo-wall" id="photo-content">
+            <!-- 图片将通过 JS 动态添加到这里 -->
+        </div>
+    </div>
+
+    <!-- 点击图片后的大图预览弹层 -->
+    <div class="photo-preview-overlay" id="photo-preview-overlay">
+        <div class="photo-preview-box" id="photo-preview-box">
+            <img id="preview-img" src="" alt="Preview">
+            <span class="preview-close-btn" id="preview-close-btn">✕</span>
+        </div>
+    </div>
 
     <!-- link窗口 -->
     <div class="popup-window" id="link-window">

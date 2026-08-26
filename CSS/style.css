@@ -301,6 +301,99 @@ body, html {
     user-select: none;
 }
 
+/* ================= Photo 窗口特殊样式 ================= */
+/* 修改photo弹窗主体背景，让它更像一张大桌子 */
+#photo-window {
+    background-color: #e0e5ec;
+}
+
+/* 照片墙容器，相对定位，方便内部图片绝对定位 */
+.photo-wall {
+    position: relative;
+    overflow: hidden; /* 超出窗口的部分隐藏 */
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* 单张拍立得卡片 */
+.photo-card {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background: #fff;
+    padding: 8px 8px 30px 8px; /* 底部留白模拟拍立得 */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 10;
+}
+
+.photo-card:active {
+    cursor: grabbing;
+}
+
+.photo-card:hover {
+    transform: scale(1.1) !important; /* 强制覆盖原始旋转，放大 */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    z-index: 50;
+}
+
+.photo-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+     /* pointer-events: none;  <-- 删掉这行！ */
+}
+
+/* ================= 大图预览层 ================= */
+.photo-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-preview-overlay.show {
+    display: flex;
+}
+
+.photo-preview-box {
+    position: relative;
+    width: 75vw;  /* 占屏幕3/4宽 */
+    height: 75vh; /* 占屏幕3/4高 */
+    background: white;
+    padding: 3px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border-radius: 8px;
+}
+
+.photo-preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 保持图片比例 */
+}
+
+.preview-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.2s;
+}
+
+.preview-close-btn:hover {
+    color: red;
+}
+
 /* ================= 动画关键帧 ================= */
 @keyframes fadeInUp {
     from {
