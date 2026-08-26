@@ -55,6 +55,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- 在 <body> 末尾加入弹出窗口结构 -->
+    <!-- about窗口 -->
     <div class="popup-window" id="about-window">
         <!-- 头部 -->
         <div class="popup-header" id="popup-header">
@@ -65,25 +66,44 @@
             </div>
         </div>
 
-    <!-- 头像和简介 -->    
-    <div class="profile-box">
-        <!-- 头像 -->
-        <div class="profile-avatar">
-            <!-- 替换为你自己的头像图片 -->
-            <img src="./image/isla3.jpg" alt="Avatar">
+        <!-- 头像和简介 -->    
+        <div class="profile-box">
+            <!-- 头像 -->
+            <div class="profile-avatar">
+                <!-- 替换为你自己的头像图片 -->
+                <img src="./image/isla3.jpg" alt="Avatar">
+            </div>
+            <!-- 右侧文字 -->
+            <div class="profile-text">
+                <h2>I'm <span class="english-name">Luyuil</span></h2>
+                <p>A student studies computer science and automation</p>
+            </div>
         </div>
-        <!-- 右侧文字 -->
-        <div class="profile-text">
-            <h2>I'm <span class="english-name">Luyuil</span></h2>
-            <p>A student studies computer science and automation</p>
-        </div>
+
+            <!-- 内容区 -->
+            <div class="popup-body">
+                <!-- 这里由 JS 动态加载 md 文件内容 -->
+                <div id="md-content">加载中...</div>
+            </div>
     </div>
 
-        <!-- 内容区 -->
-        <div class="popup-body">
-            <!-- 这里由 JS 动态加载 md 文件内容 -->
-            <div id="md-content">加载中...</div>
+    <!-- photo窗口 -->
+
+    <!-- link窗口 -->
+    <div class="popup-window" id="link-window">
+        <!-- 头部 -->
+        <div class="popup-header" id="link-popup-header">
+            <span class="popup-title">links</span>
+            <div class="window-controls">
+                <span class="control-btn" id="link-close-btn" title="关闭">✕</span>
+            </div>
+        </div>
+
+        <!-- 内容区（自动排版） -->
+        <div class="popup-body" id="link-content">
+            <!-- 项目将通过 JS 动态添加到这里 -->
         </div>
     </div>
+    
 </body>
 </html>

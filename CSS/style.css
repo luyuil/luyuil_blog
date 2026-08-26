@@ -269,6 +269,38 @@ body, html {
     margin-top: 20px;
 }
 
+/* ================= Link 窗口项目卡片样式 ================= */
+.project-card {
+    display: inline-block;
+    width: calc(50% - 20px); /* 一行两个，中间留20px缝隙 */
+    margin: 10px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5); /* 半透明白色 */
+    backdrop-filter: blur(10px); /* 半模糊效果（毛玻璃） */
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+/* 鼠标悬停放大效果 */
+.project-card:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.8); /* 稍微变实一点 */
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 防止卡片内的文本被选中（拖拽残留体验） */
+.project-card {
+    user-select: none;
+}
+
 /* ================= 动画关键帧 ================= */
 @keyframes fadeInUp {
     from {
