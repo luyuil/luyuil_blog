@@ -1,34 +1,146 @@
 /* ================= 日记（说说）功能 =================
  *
- * 设计思路：
- * 1. 数据层（DiaryAPI）与界面层（渲染/发布）分开。
- *    现在数据存在浏览器 localStorage 里，以后要上线公网时，
- *    只需要把 DiaryAPI 内部换成 LeanCloud / GitHub Issues 等接口，
- *    界面代码完全不用动。
- * 2. 每一条说说 = { id, text, images[], createdAt }。
- *    渲染时按 createdAt 从新到旧排序，最新的永远在最上面。
- * 3. 发布像 QQ 空间一样简单：文本框输入 + 选图 + 点发布（或 Ctrl+Enter）。
- *    图片会在本地自动压缩后再保存，避免撑爆 localStorage 的容量。
+ * 数据存哪里：
+ * - 线上：GitHub Issues。访客通过 GitHub 公开接口读取（谁都能看）；
+ *   作者在“管理模式”里输入自己的令牌后发布（只有你能发）。
+ * - 本地：localStorage 只用来做离线缓存和存放旧版数据（可一键迁移到线上）。
+ *
+ * 每一条说说 = { id, number, text, images[], createdAt, fromGitHub }。
+ * 渲染时按 createdAt 从新到旧排序，最新的永远在最上面。
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
-    // ================= 数据层（以后上线就只改这里） =================
-    const STORAGE_KEY = 'luyuil_diary_v1';
+    // ================= 数据层 =================
+    const STORAGE_KEY = 'luyuil_diary_v1';      // 旧版本地数据
+    const CACHE_KEY = 'luyuil_diary_cache_v2';  // GitHub 说说缓存
+    const TOKEN_KEY = 'luyuil_diary_token';     // 管理模式令牌（只存本浏览器）
+    const REPO = 'luyuil/luyuil_blog';
+    const TITLE_PREFIX = '说说';                // issue 标题前缀，用来识别哪些是说说
+
+    function readLocal(key, fallback) {
+        try {
+            const v = localStorage.getItem(key);
+            return v ? JSON.parse(v) : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function writeLocal(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* 忽略 */ }
+    }
+
+    // 把 issue 正文里的 Markdown 图片拆出来，剩下的算文字
+    function splitBodyImages(body) {
+        const images = [];
+        const text = String(body).replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, (m, alt, url) => {
+            images.push(url);
+            return '';
+        });
+        return { text: text.replace(/\n{3,}/g, '\n\n').trim(), images };
+    }
 
     const DiaryAPI = {
+        // ---- 读取：GitHub 优先，失败用缓存 ----
         async loadAll() {
             try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                const issues = await this.fetchIssues();
+                const list = issues.map(this.issueToEntry);
+                writeLocal(CACHE_KEY, { time: Date.now(), entries: list });
+                return list;
             } catch (e) {
-                return [];
+                const cached = readLocal(CACHE_KEY, null);
+                return cached && cached.entries ? cached.entries : [];
             }
         },
 
-        async saveAll(list) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-        }
+        async fetchIssues() {
+            const url = 'https://api.github.com/repos/' + REPO +
+                '/issues?state=open&per_page=100&sort=created&direction=desc';
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const issues = await res.json();
+            return issues.filter(i => !i.pull_request && (i.title || '').indexOf(TITLE_PREFIX) === 0);
+        },
+
+        issueToEntry(issue) {
+            const parsed = splitBodyImages(issue.body || '');
+            return {
+                id: 'gh-' + issue.number,
+                number: issue.number,
+                text: parsed.text,
+                images: parsed.images,
+                createdAt: Date.parse(issue.created_at),
+                fromGitHub: true
+            };
+        },
+
+        // ---- 令牌 ----
+        getToken() {
+            try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; }
+        },
+        setToken(t) { localStorage.setItem(TOKEN_KEY, t); },
+        clearToken() { localStorage.removeItem(TOKEN_KEY); },
+
+        async verifyToken(token) {
+            const res = await fetch('https://api.github.com/user', {
+                headers: { Authorization: 'token ' + token }
+            });
+            if (!res.ok) throw new Error('令牌无效或已过期');
+            const user = await res.json();
+            return user.login;
+        },
+
+        // ---- 发布 ----
+        async createIssue(opts) {
+            const token = this.getToken();
+            let body = opts.text || '';
+            (opts.imageUrls || []).forEach((url, i) => {
+                body += '\n\n![图片' + (i + 1) + '](' + url + ')';
+            });
+            const title = TITLE_PREFIX + ' · ' + formatTime(Date.now());
+            const res = await fetch('https://api.github.com/repos/' + REPO + '/issues', {
+                method: 'POST',
+                headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, body: body })
+            });
+            if (!res.ok) throw new Error('发布失败 HTTP ' + res.status);
+            return res.json();
+        },
+
+        // 把图片上传到博客仓库，返回可以直接访问的图片地址
+        async uploadImage(dataUrl, fileName) {
+            const token = this.getToken();
+            const base64 = String(dataUrl).split(',')[1] || String(dataUrl);
+            const safeName = String(fileName || 'pic.jpg').replace(/[^\w.\-]/g, '_');
+            const path = 'image/shuoshuo/' + Date.now() + '_' + safeName;
+            const res = await fetch('https://api.github.com/repos/' + REPO + '/contents/' + path, {
+                method: 'PUT',
+                headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'add shuoshuo image', content: base64 })
+            });
+            if (!res.ok) throw new Error('图片上传失败 HTTP ' + res.status);
+            const data = await res.json();
+            return data.content.download_url;
+        },
+
+        // ---- 删除（把 issue 关闭）----
+        async closeIssue(number) {
+            const token = this.getToken();
+            const res = await fetch('https://api.github.com/repos/' + REPO + '/issues/' + number, {
+                method: 'PATCH',
+                headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: 'closed' })
+            });
+            if (!res.ok) throw new Error('删除失败 HTTP ' + res.status);
+        },
+
+        // ---- 旧版本地数据 ----
+        loadLegacy() { return readLocal(STORAGE_KEY, []); },
+        saveLegacy(list) { writeLocal(STORAGE_KEY, list); },
+        clearLegacy() { try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* 忽略 */ } }
     };
 
     // ================= 页面元素 =================
@@ -40,11 +152,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const fileInput = document.getElementById('diary-file');
     const previewBox = document.getElementById('diary-preview');
     const feed = document.getElementById('diary-feed');
+    const composer = document.getElementById('diary-composer');
+    const adminBar = document.getElementById('diary-admin-bar');
 
     // ================= 状态 =================
     let entries = [];        // 所有说说
     let pendingFiles = [];   // 本次还没发布的图片文件
     let previewURLs = [];    // 预览用的临时 URL（发布后要释放）
+    let isAdmin = false;     // 是否进入管理模式
 
     // ================= 工具函数 =================
     function formatTime(ts) {
@@ -54,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
     }
 
-    // 压缩图片：最大边 1000px、质量 0.75，返回 dataURL（能存进 localStorage）
+    // 压缩图片：最大边 1000px、质量 0.75，返回 dataURL
     function compressImage(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -83,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function escapeHtml(str) {
-        return str
+        return String(str)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -98,6 +213,136 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     }
 
+    // ================= 管理模式 =================
+    function renderAdminBar() {
+        adminBar.innerHTML = '';
+
+        if (isAdmin) {
+            const status = document.createElement('span');
+            status.className = 'diary-admin-status';
+            status.textContent = '🔑 管理模式已开启，只有你能发说说';
+
+            // 有旧版本地数据时，提供一键迁移
+            const legacy = DiaryAPI.loadLegacy();
+            if (legacy.length > 0) {
+                const migrate = document.createElement('button');
+                migrate.className = 'diary-admin-btn';
+                migrate.textContent = '迁移本地说说（' + legacy.length + '）';
+                migrate.addEventListener('click', migrateLegacy);
+                adminBar.appendChild(migrate);
+            }
+
+            const exit = document.createElement('button');
+            exit.className = 'diary-admin-exit';
+            exit.textContent = '退出管理';
+            exit.addEventListener('click', () => {
+                DiaryAPI.clearToken();
+                isAdmin = false;
+                composer.style.display = 'none';
+                renderAdminBar();
+                renderFeed();
+                showToast('已退出管理模式');
+            });
+
+            adminBar.appendChild(status);
+            adminBar.appendChild(exit);
+            return;
+        }
+
+        const enter = document.createElement('button');
+        enter.className = 'diary-admin-btn';
+        enter.textContent = '🔑 管理模式';
+        enter.addEventListener('click', showTokenForm);
+        adminBar.appendChild(enter);
+    }
+
+    function showTokenForm() {
+        adminBar.innerHTML = '';
+
+        const status = document.createElement('span');
+        status.className = 'diary-admin-status';
+        status.textContent = '粘贴 GitHub 令牌（只保存在本浏览器）';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'password';
+        tokenInput.className = 'diary-token-input';
+        tokenInput.placeholder = 'ghp_...';
+
+        const ok = document.createElement('button');
+        ok.className = 'diary-admin-btn';
+        ok.textContent = '进入';
+
+        const cancel = document.createElement('button');
+        cancel.className = 'diary-admin-btn';
+        cancel.textContent = '取消';
+        cancel.addEventListener('click', renderAdminBar);
+
+        ok.addEventListener('click', async () => {
+            const token = tokenInput.value.trim();
+            if (!token) return;
+            ok.disabled = true;
+            ok.textContent = '验证中…';
+            try {
+                const login = await DiaryAPI.verifyToken(token);
+                DiaryAPI.setToken(token);
+                isAdmin = true;
+                composer.style.display = 'block';
+                renderAdminBar();
+                renderFeed();
+                showToast('欢迎回来，' + login);
+            } catch (e) {
+                showToast(e.message || '令牌无效');
+                ok.disabled = false;
+                ok.textContent = '进入';
+            }
+        });
+
+        tokenInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') ok.click();
+        });
+
+        adminBar.appendChild(status);
+        adminBar.appendChild(tokenInput);
+        adminBar.appendChild(ok);
+        adminBar.appendChild(cancel);
+        tokenInput.focus();
+    }
+
+    // 把旧版 localStorage 里的说说逐条搬到 GitHub
+    async function migrateLegacy() {
+        if (!isAdmin) return;
+        const legacy = DiaryAPI.loadLegacy();
+        if (!legacy.length) return;
+        showToast('开始迁移…');
+        try {
+            let done = 0;
+            while (legacy.length) {
+                const entry = legacy[0];
+                const imageUrls = [];
+                for (const img of (entry.images || [])) {
+                    if (String(img).indexOf('data:') === 0) {
+                        imageUrls.push(await DiaryAPI.uploadImage(img, 'migrate_' + done + '.jpg'));
+                    } else if (String(img).indexOf('http') === 0) {
+                        imageUrls.push(img);
+                    }
+                }
+                await DiaryAPI.createIssue({ text: entry.text || '', imageUrls: imageUrls });
+                legacy.shift();
+                DiaryAPI.saveLegacy(legacy);
+                done++;
+            }
+            DiaryAPI.clearLegacy();
+            await refreshEntries();
+            renderAdminBar();
+            showToast('已迁移 ' + done + ' 条说说 ✔');
+        } catch (e) {
+            console.error('迁移中断:', e);
+            await refreshEntries();
+            renderAdminBar();
+            showToast('迁移中断，已完成的不受影响');
+        }
+    }
+
     // ================= 渲染 =================
     function renderFeed() {
         feed.innerHTML = '';
@@ -106,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sorted.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'diary-empty';
-            empty.textContent = '还没有说说，来发第一条吧 ✨';
+            empty.textContent = '还没有说说 ✨';
             feed.appendChild(empty);
             return;
         }
@@ -163,13 +408,15 @@ document.addEventListener('DOMContentLoaded', function () {
         time.textContent = formatTime(entry.createdAt);
         card.appendChild(time);
 
-        // 删除（悬停显示）
-        const del = document.createElement('span');
-        del.className = 'diary-post-delete';
-        del.title = '删除这条说说';
-        del.textContent = '✕';
-        del.addEventListener('click', () => deletePost(entry.id));
-        card.appendChild(del);
+        // 删除（仅管理模式显示）
+        if (isAdmin) {
+            const del = document.createElement('span');
+            del.className = 'diary-post-delete';
+            del.title = '删除这条说说';
+            del.textContent = '✕';
+            del.addEventListener('click', () => deletePost(entry));
+            card.appendChild(del);
+        }
 
         return card;
     }
@@ -235,6 +482,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function publish() {
         if (publishBtn.disabled) return;
+        if (!isAdmin) {
+            showToast('请先进入管理模式');
+            return;
+        }
 
         const text = input.value.trim();
         const originText = publishBtn.textContent;
@@ -242,20 +493,13 @@ document.addEventListener('DOMContentLoaded', function () {
         publishBtn.textContent = '发布中…';
 
         try {
-            const images = [];
+            // 图片先压缩再上传到仓库
+            const imageUrls = [];
             for (const file of pendingFiles) {
-                images.push(await compressImage(file));
+                const dataUrl = await compressImage(file);
+                imageUrls.push(await DiaryAPI.uploadImage(dataUrl, file.name));
             }
-
-            const entry = {
-                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-                text: text,
-                images: images,
-                createdAt: Date.now()
-            };
-
-            entries.push(entry);
-            await DiaryAPI.saveAll(entries);
+            await DiaryAPI.createIssue({ text: text, imageUrls: imageUrls });
 
             // 清空输入区
             input.value = '';
@@ -265,18 +509,12 @@ document.addEventListener('DOMContentLoaded', function () {
             renderPreview();
             updatePublishState();
 
-            renderFeed();
-            feed.scrollTop = 0;            // 新说说在最上面
+            await refreshEntries();
+            feed.scrollTop = 0;
             showToast('发布成功 ✔');
         } catch (e) {
-            // 最常见的原因是 localStorage 满了（图片太多）
-            if (e && e.name === 'QuotaExceededError') {
-                entries.pop();
-                showToast('存储空间不够啦，少放几张图或删掉旧说说再试');
-            } else {
-                console.error('发布失败:', e);
-                showToast('发布失败，请重试');
-            }
+            console.error('发布失败:', e);
+            showToast('发布失败：' + (e.message || '请重试'));
         } finally {
             publishBtn.textContent = originText;
             updatePublishState();
@@ -295,12 +533,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ================= 删除说说 =================
-    function deletePost(id) {
+    async function deletePost(entry) {
+        if (!isAdmin) {
+            showToast('只有管理模式可以删除');
+            return;
+        }
         if (!confirm('确定删除这条说说吗？')) return;
-        entries = entries.filter(e => e.id !== id);
-        DiaryAPI.saveAll(entries)
-            .then(renderFeed)
-            .catch(() => showToast('删除失败'));
+        try {
+            if (entry.fromGitHub) {
+                await DiaryAPI.closeIssue(entry.number);
+            } else {
+                const legacy = DiaryAPI.loadLegacy().filter(e => e.id !== entry.id);
+                DiaryAPI.saveLegacy(legacy);
+            }
+            await refreshEntries();
+            showToast('已删除');
+        } catch (e) {
+            showToast('删除失败：' + e.message);
+        }
     }
 
     // ================= 轻提示 =================
@@ -315,26 +565,33 @@ document.addEventListener('DOMContentLoaded', function () {
         toast.textContent = msg;
         toast.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
     // ================= 初始化 =================
-    (async function init() {
-        entries = await DiaryAPI.loadAll();
-
-        // 第一次打开时放一条示例说说，方便看效果（可以随时删掉）
-        if (!localStorage.getItem(STORAGE_KEY)) {
-            entries.push({
-                id: 'welcome',
-                text: '这是我的第一条说说 🎉\n以后可以在这里记录日常、配图片，像 QQ 空间一样～',
-                images: ['./image/isla5.jpg'],
-                createdAt: Date.now()
-            });
-            await DiaryAPI.saveAll(entries);
+    async function refreshEntries() {
+        try {
+            entries = await DiaryAPI.loadAll();
+        } catch (e) {
+            entries = [];
         }
-
+        // 合并还没迁移的旧版本地数据
+        const legacy = DiaryAPI.loadLegacy();
+        const ids = new Set(entries.map(e => e.id));
+        legacy.forEach(e => {
+            if (!ids.has(e.id)) entries.push(e);
+        });
         renderFeed();
         updatePublishState();
+    }
+
+    (async function init() {
+        if (DiaryAPI.getToken()) {
+            isAdmin = true;
+            composer.style.display = 'block';
+        }
+        renderAdminBar();
+        await refreshEntries();
     })();
 
 });

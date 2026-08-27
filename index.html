@@ -107,8 +107,11 @@
         <div class="popup-body" id="diary-content">
             <!-- 发说说 + 说说时间线 -->
             <div class="diary-app" id="diary-app">
-                <!-- 发说说输入区 -->
-                <div class="diary-composer">
+                <!-- 管理模式（访客看不到输入框，只有作者能发） -->
+                <div class="diary-admin-bar" id="diary-admin-bar"></div>
+
+                <!-- 发说说输入区（管理模式才显示） -->
+                <div class="diary-composer" id="diary-composer" style="display:none">
                     <div class="diary-composer-head">
                         <img class="diary-avatar" src="./image/isla3.jpg" alt="avatar">
                         <textarea class="diary-input" id="diary-input" rows="2" placeholder="这一刻的想法…"></textarea>
