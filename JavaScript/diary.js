@@ -85,10 +85,17 @@ document.addEventListener('DOMContentLoaded', function () {
         clearToken() { localStorage.removeItem(TOKEN_KEY); },
 
         async verifyToken(token) {
-            const res = await fetch('https://api.github.com/user', {
-                headers: { Authorization: 'token ' + token }
-            });
-            if (!res.ok) throw new Error('令牌无效或已过期');
+            let res;
+            try {
+                res = await fetch('https://api.github.com/user', {
+                    headers: { Authorization: 'token ' + token }
+                });
+            } catch (e) {
+                throw new Error('网络连接失败，请检查网络后重试');
+            }
+            if (res.status === 401) throw new Error('令牌无效：可能复制不完整、已过期或已被吊销');
+            if (res.status === 403) throw new Error('令牌被拒绝：可能权限不足或触发频率限制');
+            if (!res.ok) throw new Error('验证失败（HTTP ' + res.status + '）');
             const user = await res.json();
             return user.login;
         },
