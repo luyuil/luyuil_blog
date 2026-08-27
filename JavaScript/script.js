@@ -236,6 +236,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const randomRotate = Math.floor(Math.random() * 30) - 15;
         
         const img = document.createElement('img');
+        img.loading = 'lazy';    // 照片墙图片延迟加载，不再拖慢首页
+        img.decoding = 'async';
         img.src = imageSrc;
         card.appendChild(img);
 
@@ -325,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加你的图片
     addPhoto('./image/isla5.jpg');
     addPhoto('./image/misaki.jpg');
-    addPhoto('./image/clanned.png');
+addPhoto('./image/clanned.jpg');
     addPhoto('./image/air.jpg');
     addPhoto('./image/anglebeat.jpg');
     addPhoto('./image/helloworld.jpg');
