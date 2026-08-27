@@ -1,4 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // ================= 按键音效 =================
+    const clickSound = new Audio('./music/point-beep.mp3');
+    clickSound.volume = 0.8;
+
+    function playClickSound() {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(function() {});
+    }
+
+    // 给所有需要音效的图标/按钮绑定点击音效
+    document.querySelectorAll(
+        '#github-icon, #bilibili-icon, #about-icon, #photo, #note-icon, #link, #music-icon, ' +
+        '#note-diary, #note-study, ' +
+        '#close-btn, #diary-close-btn, #study-close-btn, #photo-close-btn, #link-close-btn, #preview-close-btn'
+    ).forEach(function(el) {
+        el.addEventListener('click', playClickSound);
+    });
     
     // ================= 底部社交图标 =================
     const githubIcon = document.getElementById('github-icon');
