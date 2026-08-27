@@ -397,6 +397,69 @@ body, html {
     color: red;
 }
 
+/* ================= Note 下拉面板 ================= */
+.note-menu-panel {
+    position: fixed;
+    /* 默认隐藏在 note 图标下方（需要根据实际 DOM 布局微调位置） */
+    /* 这里假设 note 图标是第2个，坐标参考居中卡片 */
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 展开状态 */
+.note-menu-panel.show {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* 面板里的选项 */
+.note-menu-item {
+    padding: 12px 24px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s, color 0.2s;
+}
+
+.note-menu-item:hover {
+    transform: scale(1.05);
+    background: #164ed2;
+    color: white;
+}
+
+/* 隐藏面板的过渡效果（用于收起） */
+.note-menu-panel.hide {
+    display: flex;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    pointer-events: none;
+}
+
+/* ================= 日记和学习笔记专属样式（更瘦长） ================= */
+#diary-window, #study-window {
+    width: 750px;   /* 宽度变窄 */
+    height: 900px;  /* 高度变高 */
+}
+
+/* 可选：让它们的背景或内部排版特殊一点，防止和普通的 about 混淆 */
+#diary-window .popup-body, #study-window .popup-body {
+    background-color: #fdfdfd; /* 更纯净一点的白色背景 */
+}
+
 /* ================= 动画关键帧 ================= */
 @keyframes fadeInUp {
     from {

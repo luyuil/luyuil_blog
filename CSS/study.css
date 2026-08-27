@@ -1,0 +1,252 @@
+/* ================= 学习笔记窗口样式 ================= */
+
+/* 学习笔记窗口比普通窗口宽一点，方便左右分栏 */
+#study-window {
+    width: 920px;
+    height: 760px;
+}
+
+#study-content {
+    display: flex;
+    padding: 0;
+}
+
+.study-app {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+/* ---------- 左侧文件栏 ---------- */
+.study-sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background: #fafafa;
+    border-right: 1px solid #e6e6e6;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+.study-sidebar-head {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.study-sidebar-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.study-icon-btn {
+    border: none;
+    background: #f0f0f0;
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    color: #555;
+    transition: background 0.2s, color 0.2s;
+}
+
+.study-icon-btn:hover {
+    background: #e3e7f5;
+    color: #164ed2;
+}
+
+.study-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    min-height: 0;
+}
+
+.study-node-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.study-node-row:hover {
+    background: #eef1f8;
+}
+
+.study-caret {
+    font-size: 10px;
+    width: 14px;
+    text-align: center;
+    color: #999;
+    display: inline-block;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+}
+
+.study-node-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.study-node.open > .study-node-row .study-caret {
+    transform: rotate(90deg);
+}
+
+.study-children {
+    display: none;
+    margin-left: 14px;
+    border-left: 1px solid #eee;
+    padding-left: 4px;
+}
+
+.study-node.open > .study-children {
+    display: block;
+}
+
+.study-file-row.study-active,
+.study-file-row.study-active:hover {
+    background: #164ed2;
+    color: #fff;
+}
+
+/* 未连接/授权时的提示区 */
+.study-connect {
+    padding: 22px 16px;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.study-connect-btn {
+    margin-top: 10px;
+    background: #164ed2;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 8px 22px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.study-connect-btn:hover {
+    opacity: 0.9;
+}
+
+.study-hint {
+    font-size: 12px;
+    color: #999;
+    margin-top: 12px;
+    word-break: break-all;
+}
+
+/* ---------- 右侧笔记内容 ---------- */
+.study-note {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 26px;
+    min-width: 0;
+}
+
+.study-note-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.study-note-path {
+    font-size: 12px;
+    color: #999;
+    margin: 6px 0 18px;
+}
+
+.study-note-body {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #333;
+    word-break: break-word;
+}
+
+.study-note-body img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 6px 0;
+}
+
+.study-note-body pre {
+    background: #f6f8fa;
+    padding: 12px 14px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.study-note-body code {
+    background: #f2f4f7;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.study-note-body pre code {
+    background: none;
+    padding: 0;
+}
+
+.study-note-body blockquote {
+    border-left: 3px solid #164ed2;
+    margin: 12px 0;
+    padding: 2px 14px;
+    color: #666;
+    background: #f7f9fd;
+}
+
+.study-note-body table {
+    border-collapse: collapse;
+    margin: 12px 0;
+}
+
+.study-note-body th,
+.study-note-body td {
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+}
+
+.study-note-body a {
+    color: #164ed2;
+    text-decoration: none;
+}
+
+.study-note-body a:hover {
+    text-decoration: underline;
+}
+
+.study-note-body hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 18px 0;
+}
+
+.study-loading {
+    color: #999;
+    font-size: 13px;
+    padding: 40px 20px;
+    text-align: center;
+}

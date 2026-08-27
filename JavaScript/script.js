@@ -312,10 +312,137 @@ document.addEventListener('DOMContentLoaded', function() {
     addPhoto('./image/air.jpg');
     addPhoto('./image/anglebeat.jpg');
     addPhoto('./image/helloworld.jpg');
+    addPhoto('./image/littlebuster.jpg');
+    addPhoto('./image/ziluolan.jpg');
+    addPhoto('./image/lianggong.jpg');
     
     // 大图预览的关闭逻辑
     previewClose.addEventListener('click', () => previewOverlay.classList.remove('show'));
     previewOverlay.addEventListener('click', (e) => {
         if (e.target === previewOverlay) previewOverlay.classList.remove('show');
     });
+
+    // ================= Note 面板 =================
+    const noteIcon = document.getElementById('note-icon');
+    const notePanel = document.getElementById('note-menu-panel');
+    const diaryItem = document.getElementById('note-diary');
+    const studyItem = document.getElementById('note-study');
+
+    let notePanelOpen = false;
+
+    // 获取 note 图标相对于页面的位置
+    function getNoteIconCenter() {
+        const rect = noteIcon.getBoundingClientRect();
+        return {
+            x: rect.left + rect.width / 2,
+            y: rect.bottom + 10 // 图标下方10px
+        };
+    }
+
+    // 点击图标，切换面板开/关
+    noteIcon.addEventListener('click', function(e) {
+        e.stopPropagation(); // 防止冒泡到全局
+
+        if (!notePanelOpen) {
+            // 展开面板
+            const pos = getNoteIconCenter();
+            // 将面板定位在图标正下方并水平居中
+            notePanel.style.left = pos.x + 'px';
+            notePanel.style.top = pos.y + 'px';
+            notePanel.style.transform = 'translateX(-50%) scale(1)'; // 最终居中状态
+            
+            notePanel.classList.remove('hide');
+            notePanel.classList.add('show');
+            notePanelOpen = true;
+        } else {
+            // 收起面板
+            notePanel.classList.remove('show');
+            notePanel.classList.add('hide');
+            notePanelOpen = false;
+        }
+    });
+
+    // 点击页面其他区域，收起面板
+    document.addEventListener('click', function(e) {
+        if (notePanelOpen && !notePanel.contains(e.target) && e.target !== noteIcon) {
+            notePanel.classList.remove('show');
+            notePanel.classList.add('hide');
+            notePanelOpen = false;
+        }
+    });
+
+    // 点击“日记”选项，打开日记大窗口
+    diaryItem.addEventListener('click', function() {
+        // 收起下拉面板
+        notePanel.classList.remove('show');
+        notePanel.classList.add('hide');
+        notePanelOpen = false;
+
+        // 复用 setupWindow 打开日记窗口
+        // 注意：由于 setupWindow 会重复绑定，这里为日记窗口做一个特殊处理，
+        // 但我们已经有 setupWindow 的逻辑了，直接调用即可。
+        // 但是要注意，setupWindow 是绑定图标点击事件的，我们这里需要手动触发“打开”
+        manualOpenWindow('diary-window', 'diary-popup-header', 'diary-close-btn');
+    });
+
+    // 点击“学习笔记”选项，打开学习笔记大窗口
+    studyItem.addEventListener('click', function() {
+        notePanel.classList.remove('show');
+        notePanel.classList.add('hide');
+        notePanelOpen = false;
+
+        manualOpenWindow('study-window', 'study-popup-header', 'study-close-btn');
+    });
+
+    // 手动打开窗口的辅助函数（通用开关逻辑，但不用绑图标）
+    function manualOpenWindow(windowId, headerId, closeBtnId) {
+        const windowElement = document.getElementById(windowId);
+        const header = document.getElementById(headerId);
+        const closeBtn = document.getElementById(closeBtnId);
+
+        // 显示窗口
+        windowElement.style.display = 'flex';
+        windowElement.style.pointerEvents = 'auto';
+        windowElement.style.top = '50%';
+        windowElement.style.left = '50%';
+
+        // 动态计算负边距：宽度一半、高度一半，这样不管窗口多瘦长都能完美居中！
+        const width = windowElement.offsetWidth;
+        const height = windowElement.offsetHeight;
+        windowElement.style.marginTop = (-height / 2) + 'px';
+        windowElement.style.marginLeft = (-width / 2) + 'px';
+        
+        windowElement.style.transform = 'scale(0)';
+
+        animateWindow(windowElement, { fromScale: 0, toScale: 1, duration: 400 });
+
+        // 关闭按钮事件（绑定一次即可）
+        if (!closeBtn._bound) {
+            closeBtn.addEventListener('click', function() {
+                const rect = getUntransformedRect(windowElement);
+                windowElement.style.transform = 'none';
+                windowElement.style.left = '0px';
+                windowElement.style.top = '0px';
+                windowElement.style.marginLeft = rect.left + 'px';
+                windowElement.style.marginTop = rect.top + 'px';
+
+                animateWindow(windowElement, {
+                    fromScale: 1, toScale: 0, duration: 300,
+                    onComplete: () => {
+                        windowElement.style.display = 'none';
+                        windowElement.style.marginTop = '0px';
+                        windowElement.style.marginLeft = '0px';
+                    }
+                });
+            });
+            closeBtn._bound = true;
+        }
+
+        // 给新窗口绑定拖拽
+        if (!header._dragBound) {
+            makeDraggable(header, windowElement);
+            header._dragBound = true;
+        }
+    }
+
 });

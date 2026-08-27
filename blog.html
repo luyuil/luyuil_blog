@@ -6,6 +6,8 @@
     <title>luyuil_blog</title>
     <!-- 引入外部 CSS 文件 -->
     <link rel="stylesheet" href="./CSS/style.css">
+    <link rel="stylesheet" href="./CSS/diary.css">
+    <link rel="stylesheet" href="./CSS/study.css">
     <!-- marked.js 用于渲染 md（async 异步加载，不阻塞页面交互） -->
     <script async src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -52,6 +54,8 @@
     <!-- 引入外部 JS 文件 -->
     <script src="./JavaScript/windowAnimation.js"></script>
     <script src="./JavaScript/script.js"></script>
+    <script src="./JavaScript/diary.js"></script>
+    <script src="./JavaScript/study.js"></script>
 
     <!-- 在 <body> 末尾加入弹出窗口结构 -->
     <!-- about窗口 -->
@@ -84,6 +88,78 @@
                 <!-- 这里由 JS 动态加载 md 文件内容 -->
                 <div id="md-content">加载中...</div>
             </div>
+    </div>
+ 
+    <!-- note 下拉面板 (小窗口) -->
+    <div class="note-menu-panel" id="note-menu-panel">
+        <div class="note-menu-item" id="note-diary">日记</div>
+        <div class="note-menu-item" id="note-study">学习笔记</div>
+    </div>
+
+    <!-- 日记大窗口 -->
+    <div class="popup-window" id="diary-window">
+        <div class="popup-header" id="diary-popup-header">
+            <span class="popup-title">diary</span>
+            <div class="window-controls">
+                <span class="control-btn" id="diary-close-btn" title="关闭">✕</span>
+            </div>
+        </div>
+        <div class="popup-body" id="diary-content">
+            <!-- 发说说 + 说说时间线 -->
+            <div class="diary-app" id="diary-app">
+                <!-- 发说说输入区 -->
+                <div class="diary-composer">
+                    <div class="diary-composer-head">
+                        <img class="diary-avatar" src="./image/isla3.jpg" alt="avatar">
+                        <textarea class="diary-input" id="diary-input" rows="2" placeholder="这一刻的想法…"></textarea>
+                    </div>
+
+                    <!-- 选中的图片预览 -->
+                    <div class="diary-preview" id="diary-preview"></div>
+
+                    <!-- 工具栏：加图片 + 发布 -->
+                    <div class="diary-composer-toolbar">
+                        <label class="diary-add-photo" title="添加图片（最多 9 张）">
+                            <img src="./image/photo2.svg" alt="photo">
+                            图片
+                            <input type="file" id="diary-file" accept="image/*" multiple hidden>
+                        </label>
+                        <button class="diary-publish" id="diary-publish" disabled>发布</button>
+                    </div>
+                </div>
+
+                <!-- 说说列表：最新的在最上面 -->
+                <div class="diary-feed" id="diary-feed"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学习笔记大窗口 -->
+    <div class="popup-window" id="study-window">
+        <div class="popup-header" id="study-popup-header">
+            <span class="popup-title">study note</span>
+            <div class="window-controls">
+                <span class="control-btn" id="study-close-btn" title="关闭">✕</span>
+            </div>
+        </div>
+        <div class="popup-body" id="study-content">
+            <!-- 左：文件夹树；右：笔记内容 -->
+            <div class="study-app" id="study-app">
+                <div class="study-sidebar">
+                    <div class="study-sidebar-head">
+                        <span>学习笔记</span>
+                        <div class="study-sidebar-btns">
+                            <button class="study-icon-btn" id="study-refresh" title="刷新">↻</button>
+                            <button class="study-icon-btn" id="study-switch" title="更换文件夹">📂</button>
+                        </div>
+                    </div>
+                    <div class="study-tree" id="study-tree"></div>
+                </div>
+                <div class="study-note" id="study-note">
+                    <div class="study-loading">从左侧选择一篇笔记</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- photo窗口 -->
