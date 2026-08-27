@@ -321,7 +321,7 @@ body, html {
     width: 150px;
     height: 150px;
     background: #fff;
-    padding: 8px 8px 30px 8px; /* 底部留白模拟拍立得 */
+    padding: 8px 8px 10px 8px; /* 底部留白模拟拍立得 */
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: grab;
     user-select: none;
@@ -366,12 +366,15 @@ body, html {
 
 .photo-preview-box {
     position: relative;
-    width: 75vw;  /* 占屏幕3/4宽 */
-    height: 75vh; /* 占屏幕3/4高 */
+    /* 删掉 width: 75vw 和 height: 75vh */
+    max-width: 90vw;  /* 最大不能超过屏幕宽度的90% */
+    max-height: 90vh; /* 最大不能超过屏幕高度的90% */
     background: white;
-    padding: 3px;
+    padding: 3px; /* 极细的白边，或者改成 0 */
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border-radius: 8px;
+    display: inline-block; /* 让盒子自动适应内容大小 */
+    line-height: 0; /* 消除图片底部的间隙 */
 }
 
 .photo-preview-box img {

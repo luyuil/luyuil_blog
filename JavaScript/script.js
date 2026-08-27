@@ -216,14 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const card = document.createElement('div');
         card.className = 'photo-card';
 
-        // 随机旋转角度
         const randomRotate = Math.floor(Math.random() * 30) - 15;
         
         const img = document.createElement('img');
         img.src = imageSrc;
         card.appendChild(img);
 
-        // 随机位置
         setTimeout(() => {
             const rect = photoContent.getBoundingClientRect();
             const maxX = Math.max(0, rect.width - 150);
@@ -234,10 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         card.style.transform = `rotate(${randomRotate}deg)`;
 
-        // 核心逻辑：用 document 监听，鼠标移出卡片也不会断
         card.addEventListener('mousedown', function(e) {
             e.stopPropagation(); 
-            e.preventDefault(); // 防止默认拖拽图片行为导致文字被选中
+            e.preventDefault();
 
             let startX = e.clientX;
             let startY = e.clientY;
@@ -247,7 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let hasDragged = false;
 
             function onMouseMove(ev) {
-                // 只要移动超过 3 像素，就算拖拽
                 if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) {
                     hasDragged = true;
                 }
@@ -267,19 +263,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
 
-                // 如果没有拖拽，就视为点击，触发预览
                 if (!hasDragged) {
-                    previewImg.src = imageSrc;
-                    previewOverlay.classList.add('show');
+                    showPreview(imageSrc); // 调用新函数
                 }
             }
 
-            // 把监听绑定在 document 上
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });
 
         photoContent.appendChild(card);
+    }
+
+    // 新增：根据图片原始尺寸打开预览的函数
+    function showPreview(imageSrc) {
+        const tempImg = new Image();
+        tempImg.onload = function() {
+            // 获取图片原始宽高
+            let naturalW = tempImg.width;
+            let naturalH = tempImg.height;
+
+            // 限制最大尺寸（占屏幕90%），防止超清大图溢出屏幕
+            const maxW = window.innerWidth * 0.9;
+            const maxH = window.innerHeight * 0.9;
+
+            let scale = Math.min(1, maxW / naturalW, maxH / naturalH);
+            
+            // 计算最终的显示尺寸
+            let finalW = naturalW * scale;
+            let finalH = naturalH * scale;
+
+            // 设置预览框的尺寸
+            const previewBox = document.getElementById('photo-preview-box');
+            previewBox.style.width = finalW + 'px';
+            previewBox.style.height = finalH + 'px';
+
+            // 设置图片路径并显示
+            previewImg.src = imageSrc;
+            previewOverlay.classList.add('show');
+        };
+        tempImg.src = imageSrc;
     }
 
     // 添加你的图片
@@ -288,6 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
     addPhoto('./image/clanned.png');
     addPhoto('./image/air.jpg');
     addPhoto('./image/anglebeat.jpg');
+    addPhoto('./image/helloworld.jpg');
     
     // 大图预览的关闭逻辑
     previewClose.addEventListener('click', () => previewOverlay.classList.remove('show'));
