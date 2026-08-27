@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const nameIndex = new Map();    // 笔记名(小写) -> { path, handle }（支持 [[双链]]）
     const imageIndex = new Map();   // 图片名(小写) -> { path, handle }（支持 ![[图片]]）
 
+    let publicMode = false;         // 公开模式：直接从博客仓库的 notes/ 读取（访客可见）
+    let publicIndex = { files: [] };// 仓库里 notes/index.json 的文件索引
+
     const isNoteFile = (name) => /\.(md|markdown|txt)$/i.test(name);
     const isImageFile = (name) => /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(name);
 
@@ -405,8 +408,194 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // ================= 公开模式：从博客仓库读取笔记 =================
+    async function tryEnterPublicMode() {
+        try {
+            const res = await fetch('./notes/index.json', { cache: 'no-store' });
+            if (!res.ok) return false;
+            publicIndex = await res.json();
+            publicMode = true;
+            switchBtn.style.display = 'none'; // 公开模式下不需要“更换文件夹”
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function buildPublicTree() {
+        const root = { name: '', kind: 'dir', children: [] };
+        const dirMap = { '': root };
+        (publicIndex.files || []).forEach(f => {
+            const parts = f.split('/');
+            const name = parts.pop();
+            let cur = root;
+            let curPath = '';
+            for (const part of parts) {
+                curPath = curPath ? curPath + '/' + part : part;
+                if (!dirMap[curPath]) {
+                    const d = { name: part, kind: 'dir', children: [] };
+                    dirMap[curPath] = d;
+                    cur.children.push(d);
+                }
+                cur = dirMap[curPath];
+            }
+            if (isNoteFile(name)) {
+                cur.children.push({ name, kind: 'file', path: f });
+            }
+        });
+        const sortNodes = (n) => {
+            n.children.sort((a, b) => {
+                if (a.kind !== b.kind) return a.kind === 'dir' ? -1 : 1;
+                return a.name.localeCompare(b.name, 'zh-CN');
+            });
+            n.children.forEach(c => { if (c.kind === 'dir') sortNodes(c); });
+        };
+        sortNodes(root);
+        return root.children;
+    }
+
+    function renderPublicNode(node, pathArr) {
+        const el = document.createElement('div');
+        el.className = 'study-node';
+
+        const row = document.createElement('div');
+        row.className = 'study-node-row' + (node.kind === 'file' ? ' study-file-row' : '');
+        row.title = node.name;
+        if (node.kind === 'file') row.dataset.path = pathKey(pathArr.concat(node.name));
+
+        const caret = document.createElement('span');
+        caret.className = 'study-caret';
+        caret.textContent = node.kind === 'dir' ? '▶' : '';
+
+        const name = document.createElement('span');
+        name.className = 'study-node-name';
+        name.textContent = (node.kind === 'dir' ? '📁 ' : '📄 ') + node.name;
+
+        row.appendChild(caret);
+        row.appendChild(name);
+        el.appendChild(row);
+
+        if (node.kind === 'dir') {
+            const childrenBox = document.createElement('div');
+            childrenBox.className = 'study-children';
+            el.appendChild(childrenBox);
+            node.children.forEach(c => childrenBox.appendChild(renderPublicNode(c, pathArr.concat(node.name))));
+            row.addEventListener('click', () => el.classList.toggle('open'));
+        } else {
+            row.addEventListener('click', () => openPublicNote(node.path, node.name, pathArr.concat(node.name)));
+        }
+        return el;
+    }
+
+    function buildPublicNameIndex() {
+        nameIndex.clear();
+        (publicIndex.files || []).forEach(f => {
+            if (!isNoteFile(f)) return;
+            const base = f.split('/').pop();
+            const info = { path: f, name: base };
+            nameIndex.set(base.toLowerCase(), info);
+            nameIndex.set(base.replace(/\.(md|markdown|txt)$/i, '').toLowerCase(), info);
+        });
+    }
+
+    function loadPublicTree() {
+        buildPublicNameIndex();
+        treeBox.innerHTML = '';
+        const roots = buildPublicTree();
+        roots.forEach(r => treeBox.appendChild(renderPublicNode(r, [])));
+    }
+
+    async function openPublicNote(repoPath, displayName, pathArr) {
+        currentNote = { path: repoPath, name: displayName, public: true };
+
+        treeBox.querySelectorAll('.study-file-row.study-active').forEach(el => el.classList.remove('study-active'));
+        const activeRow = treeBox.querySelector('.study-file-row[data-path="' + CSS.escape(pathKey(pathArr)) + '"]');
+        if (activeRow) activeRow.classList.add('study-active');
+
+        noteBox.innerHTML = '<div class="study-loading">读取中…</div>';
+
+        try {
+            const res = await fetch('./notes/' + repoPath);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const raw = await res.text();
+            const html = await renderMarkdown(raw);
+
+            noteBox.innerHTML = '';
+
+            const title = document.createElement('div');
+            title.className = 'study-note-title';
+            title.textContent = displayName.replace(/\.(md|markdown|txt)$/i, '');
+
+            const pathEl = document.createElement('div');
+            pathEl.className = 'study-note-path';
+            pathEl.textContent = repoPath;
+
+            const body = document.createElement('div');
+            body.className = 'study-note-body';
+            body.innerHTML = html;
+            bindPublicLinks(body);
+
+            noteBox.appendChild(title);
+            noteBox.appendChild(pathEl);
+            noteBox.appendChild(body);
+
+            resolvePublicImages(body, repoPath.split('/').slice(0, -1));
+            noteBox.scrollTop = 0;
+        } catch (e) {
+            console.error('读取笔记失败:', e);
+            noteBox.innerHTML = '<div class="study-loading">读取失败：' + escapeHtml(e.message || e) + '</div>';
+        }
+    }
+
+    function bindPublicLinks(body) {
+        body.querySelectorAll('a[href^="obsidian-note://"]').forEach(a => {
+            a.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const name = decodeURIComponent(a.getAttribute('href').replace('obsidian-note://', ''));
+                const found = nameIndex.get(name.toLowerCase());
+                if (found) {
+                    openPublicNote(found.path, found.name, found.path.split('/'));
+                } else {
+                    noteBox.innerHTML = '<div class="study-loading">没有找到笔记：' + escapeHtml(name) + '</div>';
+                }
+            });
+        });
+    }
+
+    function resolvePublicImages(body, noteDir) {
+        body.querySelectorAll('img').forEach(img => {
+            let src = img.getAttribute('src') || '';
+            if (/^(data:|https?:|blob:)/i.test(src)) return;
+            try { src = decodeURIComponent(src); } catch (e) { /* 保留原样 */ }
+
+            const parts = src.replace(/^\.?\//, '').split('/').filter(Boolean);
+            if (!parts.length) return;
+
+            let target = null;
+            if (parts.length > 1) {
+                target = noteDir.concat(parts).join('/');
+            } else {
+                const local = noteDir.concat(parts).join('/');
+                if (publicIndex.files.indexOf(local) !== -1) {
+                    target = local;
+                } else {
+                    const hit = (publicIndex.files || []).find(f => f.split('/').pop().toLowerCase() === parts[0].toLowerCase());
+                    if (hit) target = hit;
+                }
+            }
+            if (target && publicIndex.files.indexOf(target) !== -1) {
+                img.src = './notes/' + target;
+            }
+        });
+    }
+
     // ================= 打开窗口时初始化 =================
     async function initStudy() {
+        switchBtn.style.display = '';
+        if (await tryEnterPublicMode()) {
+            loadPublicTree();
+            return;
+        }
         if (!window.showDirectoryPicker) {
             showConnect('当前浏览器不支持读取文件夹，请改用 Chrome 或 Edge。');
             return;
@@ -462,6 +651,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ================= 事件绑定 =================
     refreshBtn.addEventListener('click', async () => {
+        if (publicMode) {
+            try {
+                const res = await fetch('./notes/index.json', { cache: 'no-store' });
+                if (res.ok) publicIndex = await res.json();
+            } catch (e) { /* 忽略 */ }
+            loadPublicTree();
+            if (currentNote && currentNote.public) {
+                openPublicNote(currentNote.path, currentNote.name, currentNote.path.split('/'));
+            }
+            return;
+        }
         await loadTree();
         if (currentNote) {
             try {
