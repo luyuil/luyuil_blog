@@ -230,6 +230,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderMarkdown(raw) {
         return ensureMarked().then(() => {
             let text = raw;
+            // 去掉 Obsidian 的 YAML frontmatter（--- 之间的内容），博客上不显示
+            text = text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
             // Obsidian 图片：![[图片.png|说明]] -> ![图片.png](图片.png)
             text = text.replace(/!\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]/g, (m, name) => {
                 const n = name.trim();
