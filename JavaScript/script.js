@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!markedReady) {
             markedReady = new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+                script.src = './JavaScript/marked.min.js';
                 script.onload = () => resolve();
                 script.onerror = () => {
                     markedReady = null;

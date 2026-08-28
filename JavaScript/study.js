@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.marked) return Promise.resolve();
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+            script.src = './JavaScript/marked.min.js';
             script.onload = resolve;
             script.onerror = () => reject(new Error('Markdown 解析库加载失败'));
             document.head.appendChild(script);
