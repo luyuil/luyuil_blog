@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-01 12:00:50 UTC",
+  "updated": "2026-09-01 12:03:44 UTC",
   "entries": [
     {
       "id": "gh-3",
@@ -9,16 +9,6 @@
         "./image/shuoshuo/1788261359790______2026-09-01_182849.png"
       ],
       "createdAt": 1788261363000,
-      "fromGitHub": true
-    },
-    {
-      "id": "gh-2",
-      "number": 2,
-      "text": "玩完夏日口袋，刀麻了",
-      "images": [
-        "https://github.com/user-attachments/assets/de1f12f4-04af-4472-acb4-3aa4024511a0"
-      ],
-      "createdAt": 1788261201000,
       "fromGitHub": true
     },
     {
