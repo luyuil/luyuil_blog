@@ -43,17 +43,34 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const DiaryAPI = {
-        // ---- 读取：GitHub 优先，失败用缓存 ----
+        // ---- 读取：站内 diary.json 优先（不依赖 GitHub API），失败再退回 API/缓存 ----
         async loadAll() {
             try {
-                const issues = await this.fetchIssues();
-                const list = issues.map(this.issueToEntry);
+                const list = await this.fetchLocalDiary();
                 writeLocal(CACHE_KEY, { time: Date.now(), entries: list });
                 return list;
             } catch (e) {
-                const cached = readLocal(CACHE_KEY, null);
-                return cached && cached.entries ? cached.entries : [];
+                try {
+                    const issues = await this.fetchIssues();
+                    const list = issues.map(this.issueToEntry);
+                    writeLocal(CACHE_KEY, { time: Date.now(), entries: list });
+                    return list;
+                } catch (e2) {
+                    const cached = readLocal(CACHE_KEY, null);
+                    return cached && cached.entries ? cached.entries : [];
+                }
             }
+        },
+
+        // 从博客自己的 diary.json 读取（Actions 自动生成，速度快、无 API 限制）
+        async fetchLocalDiary() {
+            const res = await fetch('./diary.json', { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (data && Array.isArray(data.entries)) {
+                return data.entries.map(e => Object.assign({ fromGitHub: true }, e));
+            }
+            throw new Error('diary.json 格式不对');
         },
 
         async fetchIssues() {
@@ -62,15 +79,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const res = await fetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const issues = await res.json();
-            return issues.filter(i => !i.pull_request && (i.title || '').indexOf(TITLE_PREFIX) === 0);
+            // 仓库里的非 PR issue 都算说说（在 GitHub 发 issue 就是发说说）
+            return issues.filter(i => !i.pull_request);
         },
 
         issueToEntry(issue) {
             const parsed = splitBodyImages(issue.body || '');
+            const text = parsed.text || issue.title || '';   // 标题兜底
             return {
                 id: 'gh-' + issue.number,
                 number: issue.number,
-                text: parsed.text,
+                text: text,
                 images: parsed.images,
                 createdAt: Date.parse(issue.created_at),
                 fromGitHub: true
