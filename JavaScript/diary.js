@@ -64,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 从博客自己的 diary.json 读取（Actions 自动生成，速度快、无 API 限制）
         async fetchLocalDiary() {
-            const res = await fetch('./diary.json', { cache: 'no-store' });
+            // 加时间戳强制绕过浏览器/CDN 缓存，保证每次都是最新数据
+            const res = await fetch('./diary.json?t=' + Date.now(), { cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (data && Array.isArray(data.entries)) {
@@ -525,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const dataUrl = await compressImage(file);
                 imageUrls.push(await DiaryAPI.uploadImage(dataUrl, file.name));
             }
-            await DiaryAPI.createIssue({ text: text, imageUrls: imageUrls });
+            const issue = await DiaryAPI.createIssue({ text: text, imageUrls: imageUrls });
 
             // 清空输入区
             input.value = '';
@@ -535,7 +536,17 @@ document.addEventListener('DOMContentLoaded', function () {
             renderPreview();
             updatePublishState();
 
-            await refreshEntries();
+            // 乐观更新：立刻显示新说说（线上 diary.json 由 Actions 稍后同步）
+            const newEntry = {
+                id: 'gh-' + issue.number,
+                number: issue.number,
+                text: text,
+                images: imageUrls.map(u => u.replace(/^https:\/\/raw\.githubusercontent\.com\/luyuil\/luyuil_blog\/master\//, './')),
+                createdAt: Date.now(),
+                fromGitHub: true
+            };
+            entries.unshift(newEntry);
+            renderFeed();
             feed.scrollTop = 0;
             showToast('发布成功 ✔');
         } catch (e) {
@@ -572,7 +583,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const legacy = DiaryAPI.loadLegacy().filter(e => e.id !== entry.id);
                 DiaryAPI.saveLegacy(legacy);
             }
-            await refreshEntries();
+            // 乐观更新：本地立刻移除，线上 diary.json 由 Actions 稍后同步
+            entries = entries.filter(e => e.id !== entry.id);
+            renderFeed();
             showToast('已删除');
         } catch (e) {
             showToast('删除失败：' + e.message);
