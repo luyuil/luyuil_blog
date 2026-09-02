@@ -70,6 +70,8 @@ def main():
         if 'nothing to commit' in output:
             print('笔记没有新变化（内容已提交过），直接执行推送。')
         # 无论有没有新提交都推送一次，确保本地已提交的内容一定上线
+        # 先合并远程（GitHub Actions 可能刚提交过），再推送，避免被拒绝
+        subprocess.run(git + ['pull', '--rebase', 'origin', 'master'], check=True)
         subprocess.run(git + ['push', 'origin', 'master'], check=True)
         print('已推送到 GitHub，稍等片刻线上自动更新。')
 

@@ -66,10 +66,9 @@ def main():
         })
 
     entries.sort(key=lambda e: e['createdAt'], reverse=True)
-    data = {
-        'updated': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'),
-        'entries': entries
-    }
+    # 注意：不能放“更新时间”这类每次都会变的字段，否则 Actions 每次都会
+    # 认为有变化而重复提交，形成死循环。只有 entries 真正变化时才该提交。
+    data = {'entries': entries}
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print('diary.json 已更新:', len(entries), '条说说')
