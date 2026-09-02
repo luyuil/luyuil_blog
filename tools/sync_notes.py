@@ -59,9 +59,19 @@ def main():
     if '--push' in sys.argv:
         git = ['git', '-C', REPO_ROOT]
         subprocess.run(git + ['add', 'notes'], check=True)
-        subprocess.run(git + ['commit', '-m', '同步 Obsidian 学习笔记'], check=True)
+        r = subprocess.run(
+            git + ['commit', '-m', '同步 Obsidian 学习笔记'],
+            capture_output=True, text=True
+        )
+        output = (r.stdout or '') + (r.stderr or '')
+        if r.returncode != 0 and 'nothing to commit' not in output:
+            print(output)
+            sys.exit(1)
+        if 'nothing to commit' in output:
+            print('笔记没有新变化（内容已提交过），直接执行推送。')
+        # 无论有没有新提交都推送一次，确保本地已提交的内容一定上线
         subprocess.run(git + ['push', 'origin', 'master'], check=True)
-        print('已提交并推送到 GitHub，稍等片刻线上自动更新。')
+        print('已推送到 GitHub，稍等片刻线上自动更新。')
 
 
 if __name__ == '__main__':
