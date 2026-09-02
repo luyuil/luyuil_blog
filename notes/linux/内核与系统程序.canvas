@@ -1,0 +1,16 @@
+{
+	"nodes":[
+		{"id":"d92cb39134f27a33","type":"text","text":"第三方程序","x":-280,"y":-150,"width":125,"height":50},
+		{"id":"600c4f8070b6eca4","type":"text","text":"用户","x":-520,"y":-80,"width":80,"height":60},
+		{"id":"8d36dfabada8e1e1","type":"text","text":"应用程序","x":-280,"y":14,"width":125,"height":50},
+		{"id":"f136cbc71bfaaa89","x":-40,"y":14,"width":82,"height":50,"type":"text","text":"内核"},
+		{"id":"5e13412da43d2f65","x":140,"y":9,"width":82,"height":60,"type":"text","text":"硬件"}
+	],
+	"edges":[
+		{"id":"8d3d8497e5394244","fromNode":"600c4f8070b6eca4","fromSide":"right","toNode":"d92cb39134f27a33","toSide":"left","label":"使用"},
+		{"id":"a22ac107aa02e610","fromNode":"600c4f8070b6eca4","fromSide":"right","toNode":"8d36dfabada8e1e1","toSide":"left","label":"使用"},
+		{"id":"b7d4af521ef8bf40","fromNode":"8d36dfabada8e1e1","fromSide":"right","toNode":"f136cbc71bfaaa89","toSide":"left","label":"调用"},
+		{"id":"f6ae896040282894","fromNode":"d92cb39134f27a33","fromSide":"right","toNode":"f136cbc71bfaaa89","toSide":"top","label":"调用"},
+		{"id":"60764d38d0ffcd4a","fromNode":"f136cbc71bfaaa89","fromSide":"right","toNode":"5e13412da43d2f65","toSide":"left","label":"调用"}
+	]
+}
