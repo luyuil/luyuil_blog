@@ -413,7 +413,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ================= 公开模式：从博客仓库读取笔记 =================
     async function tryEnterPublicMode() {
         try {
-            const res = await fetch('./notes/index.json', { cache: 'no-store' });
+            // 加时间戳绕过 CDN/浏览器缓存，保证线上永远读到最新索引
+            const res = await fetch('./notes/index.json?t=' + Date.now(), { cache: 'no-store' });
             if (!res.ok) return false;
             publicIndex = await res.json();
             publicMode = true;
@@ -517,7 +518,8 @@ document.addEventListener('DOMContentLoaded', function () {
         noteBox.innerHTML = '<div class="study-loading">读取中…</div>';
 
         try {
-            const res = await fetch('./notes/' + repoPath);
+            // 加时间戳绕过缓存，笔记更新后立刻可见
+            const res = await fetch('./notes/' + repoPath + '?t=' + Date.now(), { cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const raw = await res.text();
             const html = await renderMarkdown(raw);
@@ -655,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshBtn.addEventListener('click', async () => {
         if (publicMode) {
             try {
-                const res = await fetch('./notes/index.json', { cache: 'no-store' });
+                const res = await fetch('./notes/index.json?t=' + Date.now(), { cache: 'no-store' });
                 if (res.ok) publicIndex = await res.json();
             } catch (e) { /* 忽略 */ }
             loadPublicTree();
