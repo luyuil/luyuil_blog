@@ -13,6 +13,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 REPO = 'luyuil/luyuil_blog'
+OWNER = REPO.split('/')[0]   # 只认博主本人发的 issue
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'diary.json')
 
 
@@ -52,6 +53,8 @@ def main():
     for i in issues:
         if i.get('pull_request'):
             continue  # 跳过 PR
+        if (i.get('user') or {}).get('login') != OWNER:
+            continue  # 防止陌生人在公开仓库开 issue 刷屏
         text, images = split_body_images(i.get('body') or '')
         # 直接用 GitHub 发 issue 时，文字可能写在标题里而不是正文，这里做兜底
         if not text and i.get('title'):

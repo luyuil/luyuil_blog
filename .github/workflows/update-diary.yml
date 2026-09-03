@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   update-diary:
+    # 只在博主本人操作 issue 时才自动更新，陌生人的 issue 不触发构建
+    if: github.event_name != 'issues' || github.event.issue.user.login == 'luyuil'
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码

@@ -80,8 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const res = await fetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const issues = await res.json();
-            // 仓库里的非 PR issue 都算说说（在 GitHub 发 issue 就是发说说）
-            return issues.filter(i => !i.pull_request);
+            // 仓库里的非 PR issue 都算说说（在 GitHub 发 issue 就是发说说），
+            // 但只认博主本人发的，防止陌生人在公开仓库开 issue 刷屏
+            return issues.filter(i => !i.pull_request && i.user && i.user.login === 'luyuil');
         },
 
         issueToEntry(issue) {
