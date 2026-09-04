@@ -59,19 +59,19 @@ def main():
     if '--push' in sys.argv:
         git = ['git', '-C', REPO_ROOT]
         subprocess.run(git + ['add', 'notes'], check=True)
-        r = subprocess.run(
-            git + ['commit', '-m', '同步 Obsidian 学习笔记'],
-            capture_output=True, text=True
+        has_changes = subprocess.run(
+            git + ['diff', '--cached', '--quiet'],
+            capture_output=True, encoding='utf-8', errors='replace'
         )
-        output = (r.stdout or '') + (r.stderr or '')
-        if r.returncode != 0 and 'nothing to commit' not in output:
-            print(output)
-            sys.exit(1)
-        if 'nothing to commit' in output:
+        if has_changes.returncode != 0:
+            # 有暂存的笔记改动，才需要提交
+            subprocess.run(git + ['commit', '-m', '同步 Obsidian 学习笔记'], check=True)
+        else:
             print('笔记没有新变化（内容已提交过），直接执行推送。')
         # 无论有没有新提交都推送一次，确保本地已提交的内容一定上线
         # 先合并远程（GitHub Actions 可能刚提交过），再推送，避免被拒绝
-        subprocess.run(git + ['pull', '--rebase', 'origin', 'master'], check=True)
+        # --autostash：即使有未提交改动也能自动暂存合并，完成后自动恢复
+        subprocess.run(git + ['pull', '--rebase', '--autostash', 'origin', 'master'], check=True)
         subprocess.run(git + ['push', 'origin', 'master'], check=True)
         print('已推送到 GitHub，稍等片刻线上自动更新。')
 
