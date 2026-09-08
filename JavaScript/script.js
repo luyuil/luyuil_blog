@@ -212,7 +212,6 @@ document.addEventListener('DOMContentLoaded', function() {
         linkContent.appendChild(card);
     }
 
-    addProject('24电赛H车', 'https://github.com/luyuil/Line_Track_Car');
     addProject('个人博客架构', 'https://github.com/luyuil/luyuil_blog');
 
     // ================= Photo 窗口 =================
