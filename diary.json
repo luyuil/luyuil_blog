@@ -1,6 +1,16 @@
 {
   "entries": [
     {
+      "id": "gh-9",
+      "number": 9,
+      "text": "两样都想要啊😢",
+      "images": [
+        "./image/shuoshuo/1790077419373______2026-09-22_193903.png"
+      ],
+      "createdAt": 1790077418000,
+      "fromGitHub": true
+    },
+    {
       "id": "gh-8",
       "number": 8,
       "text": "明天开学，新学期我得静下来，专注自身，沉淀自己",
