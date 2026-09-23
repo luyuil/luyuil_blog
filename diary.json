@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "id": "gh-10",
+      "number": 10,
+      "text": "物理好难，英语好难😫",
+      "images": [],
+      "createdAt": 1790167763000,
+      "fromGitHub": true
+    },
+    {
       "id": "gh-9",
       "number": 9,
       "text": "两样都想要啊😢",
