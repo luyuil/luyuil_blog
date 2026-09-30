@@ -1,6 +1,16 @@
 {
   "entries": [
     {
+      "id": "gh-12",
+      "number": 12,
+      "text": "艾拉是对的🥰",
+      "images": [
+        "https://github.com/user-attachments/assets/216dbb8d-26e5-4e6a-bd1d-6d73f10d8b9d"
+      ],
+      "createdAt": 1790763978000,
+      "fromGitHub": true
+    },
+    {
       "id": "gh-11",
       "number": 11,
       "text": "不知道为什么，这个博客一直打不开了😱",
