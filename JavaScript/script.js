@@ -213,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     addProject('个人博客架构', 'https://github.com/luyuil/luyuil_blog');
+    addProject('新闻网站爬虫','https://github.com/luyuil/web-crawler');
 
     // ================= Photo 窗口 =================
     // 注意：先 setupWindow，再初始化里面的元素
@@ -326,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加你的图片
     addPhoto('./image/isla5.jpg');
     addPhoto('./image/misaki.jpg');
-addPhoto('./image/clanned.jpg');
+    addPhoto('./image/clanned.jpg');
     addPhoto('./image/air.jpg');
     addPhoto('./image/anglebeat.jpg');
     addPhoto('./image/helloworld.jpg');
