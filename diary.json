@@ -13,8 +13,10 @@
     {
       "id": "gh-14",
       "number": 14,
-      "text": "水仙就是遗憾文学啊![正在上传 屏幕截图 2026-10-11 185719.png…]()",
-      "images": [],
+      "text": "水仙就是遗憾文学啊",
+      "images": [
+        "https://github.com/user-attachments/assets/5ffa61b6-59bd-4d74-a20d-ad74d0578121"
+      ],
       "createdAt": 1791723149000,
       "fromGitHub": true
     },
