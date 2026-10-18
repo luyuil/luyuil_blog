@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addProject('个人博客架构', 'https://github.com/luyuil/luyuil_blog');
     addProject('新闻网站爬虫','https://github.com/luyuil/web-crawler');
+    addProject('PyTorch学习笔记','https://github.com/luyuil/Pytorch_study');
 
     // ================= Photo 窗口 =================
     // 注意：先 setupWindow，再初始化里面的元素
