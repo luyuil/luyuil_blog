@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "id": "gh-25",
+      "number": 25,
+      "text": "搞笑番就是🧊",
+      "images": [],
+      "createdAt": 1795362194000,
+      "fromGitHub": true
+    },
+    {
       "id": "gh-24",
       "number": 24,
       "text": "nord+cascadia，好看捏🥰",
